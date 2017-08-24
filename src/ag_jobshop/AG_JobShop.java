@@ -39,11 +39,11 @@ public class AG_JobShop {
      */
     
     //Variáveis de controle e etc (Os quais podem ser alterados pela interface grafica)
-    private int tam_populacao = 2000; //tamanho da populacao dos indivíduos do AG
+    private int tam_populacao = 200; //tamanho da populacao dos indivíduos do AG
     private int tx_crossover = 40; //probabilidade de crossover entre os membros da populacao
-    private int tx_elitismo = 10; //porcentagem da populacao reservada para efetuar elitismo
+    private int tx_elitismo = 15; //porcentagem da populacao reservada para efetuar elitismo
     private int tx_mutacao = 30; //probabilidade de um membro da populacao sofrer mutacao
-    private int flag_tipomutacao = 1; // Tipo de mutação a ser realizado. 0 para tradiciona, 1 para SA, 2 para GRASP e 3 para VNS
+    private int flag_tipomutacao = 2; // Tipo de mutação a ser realizado. 0 para tradiciona, 1 para SA, 2 para GRASP e 3 para VNS
     private String penalidade = "999"; //penalidade para tarefas que nao deveriam ser alocadas
     private final CSVReader leitorDataset; //Leitor de arquivos CSV
     private String[][] dataset; //Arquivo do dataset
@@ -198,6 +198,81 @@ public class AG_JobShop {
        return individuoOriginal;
    }
    
+   private char[] mutacaoVNSv1(char[] individuoOriginal){
+       /*
+       Realiza uma mutação em um indivíduo usando o princípio da VNS: Variable Neighborhood Search.
+       Por ora o tamanho de vizinhaças exploradas é fixo, mas poderá ser alterado para 
+       o usuário setar.
+       Como entende-se por "vizinhança" qualquer alteração a um indivíduo, ela 
+       é composta nessa versão por um conjunto de mutações simples ao indivíduo original.
+       */
+       int tamanhoVizinhanca = 50;
+       char[][] neighborhood = new char[tamanhoVizinhanca][];
+       //As "tamanhoVizinhanca" linhas da vizinhança são instanciadas com uma 
+       //mutação simples do indivíduo em cada uma. Problema: podem ocorrer repetições.
+       for(int i = 0;i<tamanhoVizinhanca;i++)
+       {
+           neighborhood[i] = mutacao(individuoOriginal).clone();
+       }
+       //Aqui são instanciadas variáveis de controle para a seleção do melhor indivíduo da VNS
+       double melhorFit = Double.MAX_VALUE;
+       int posicaoMelhorVizinho = 0;
+       for(int i = 0; i< tamanhoVizinhanca; i++)
+       {
+           double fitTemporario = fitness(neighborhood[i].clone(),tam_populacao);
+           if(fitTemporario<melhorFit)
+           {
+               melhorFit = fitTemporario;
+               posicaoMelhorVizinho = i;
+           }
+       }
+       return neighborhood[posicaoMelhorVizinho].clone();
+   }
+   
+   private char[] mutacaoVNS(char[] individuoOriginal){
+       /*
+       Realiza uma mutação em um indivíduo usando o princípio da VNS: Variable Neighborhood Search.
+       Por ora o tamanho de vizinhaças exploradas é fixo, mas poderá ser alterado para 
+       o usuário setar.
+       Como entende-se por "vizinhança" qualquer alteração a um indivíduo, ela 
+       é composta nessa versão por um conjunto de mutações simples ao indivíduo original.
+       Nesta versão da VNS, são feitas iterações sucessivas até que uma estagnação
+       da melhora (quando houver) ocorra.
+       */
+       int tamanhoVizinhanca = 50;
+       char[][] neighborhood = new char[tamanhoVizinhanca][];
+       char[] melhorAtual = individuoOriginal.clone();
+       //Aqui são instanciadas variáveis de controle para a seleção do melhor indivíduo da VNS
+       double melhorFit = Double.MAX_VALUE;
+       int posicaoMelhorVizinho = 0;
+       int iteracoesEstagnadas = 0;
+       do{
+           //As "tamanhoVizinhanca" linhas da vizinhança são instanciadas com uma 
+           //mutação simples do indivíduo em cada uma. Problema: podem ocorrer repetições.
+           for(int i = 0;i<tamanhoVizinhanca;i++)
+           {
+                neighborhood[i] = mutacao(melhorAtual).clone();
+           }
+           for(int i = 0; i< tamanhoVizinhanca; i++)
+           {
+                double fitTemporario = fitness(neighborhood[i].clone(),tam_populacao);
+                if(fitTemporario<melhorFit)
+                {
+                    melhorFit = fitTemporario;
+                    posicaoMelhorVizinho = i;
+                }
+           }
+           if(melhorFit>fitness(melhorAtual,tam_populacao))
+           {
+               melhorAtual = neighborhood[posicaoMelhorVizinho].clone();
+               iteracoesEstagnadas = 0;
+           }
+           else
+               iteracoesEstagnadas++;
+       }while(iteracoesEstagnadas<=5);
+       return melhorAtual;
+   }
+   
    public double fitness(char[] individuoAvaliado,int tamanhoPop){
        /*
        Essa função calcula o Makespam do individuo.
@@ -208,7 +283,7 @@ public class AG_JobShop {
        */
        float valor =0;
        int linha = 0;
-       char[] maquinas = {'A','B','C','D','E','F','G','H','I','J','K','L','M','O','P','Q','R','S'};
+       //char[] maquinas = {'A','B','C','D','E','F','G','H','I','J','K','L','M','O','P','Q','R','S'};
        double[] fit = new double[dataset[0].length];
        /*Por padrão os vetores já são inicializados com zeros. Mas se ocorrer algum
        problema com lixo de memória, descomentar esse trecho.
@@ -335,6 +410,11 @@ public class AG_JobShop {
                        case 1:
                        {
                            novaPopulacao[i] = mutacaoSAComplexa(novaPopulacao[i]);
+                           break;
+                       }
+                       case 2:
+                       {
+                           novaPopulacao[i] = mutacaoVNS(novaPopulacao[i]);
                            break;
                        }
                        default:
