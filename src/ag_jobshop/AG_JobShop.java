@@ -28,6 +28,7 @@ import javax.swing.JTextArea;
 import javax.swing.JFrame;
 import java.lang.Math;
 import static java.lang.Math.exp;
+import java.util.ArrayList;
 
 
 public class AG_JobShop {
@@ -43,7 +44,7 @@ public class AG_JobShop {
     private int tx_crossover = 40; //probabilidade de crossover entre os membros da populacao
     private int tx_elitismo = 15; //porcentagem da populacao reservada para efetuar elitismo
     private int tx_mutacao = 30; //probabilidade de um membro da populacao sofrer mutacao
-    private int flag_tipomutacao = 2; // Tipo de mutação a ser realizado. 0 para tradiciona, 1 para SA, 2 para GRASP e 3 para VNS
+    private int flag_tipomutacao = 3; // Tipo de mutação a ser realizado. 0 para tradiciona, 1 para SA, 2 para GRASP e 3 para VNS
     private String penalidade = "999"; //penalidade para tarefas que nao deveriam ser alocadas
     private final CSVReader leitorDataset; //Leitor de arquivos CSV
     private String[][] dataset; //Arquivo do dataset
@@ -239,14 +240,16 @@ public class AG_JobShop {
        Nesta versão da VNS, são feitas iterações sucessivas até que uma estagnação
        da melhora (quando houver) ocorra.
        */
+       //Conjuntos de vizinhança e seu tamanho.
        int tamanhoVizinhanca = 50;
        char[][] neighborhood = new char[tamanhoVizinhanca][];
        char[] melhorAtual = individuoOriginal.clone();
        //Aqui são instanciadas variáveis de controle para a seleção do melhor indivíduo da VNS
-       double melhorFit = Double.MAX_VALUE;
+       double melhorFit;
        int posicaoMelhorVizinho = 0;
        int iteracoesEstagnadas = 0;
        do{
+           melhorFit = Double.MAX_VALUE;
            //As "tamanhoVizinhanca" linhas da vizinhança são instanciadas com uma 
            //mutação simples do indivíduo em cada uma. Problema: podem ocorrer repetições.
            for(int i = 0;i<tamanhoVizinhanca;i++)
@@ -271,6 +274,64 @@ public class AG_JobShop {
                iteracoesEstagnadas++;
        }while(iteracoesEstagnadas<=5);
        return melhorAtual;
+   }
+   
+   private char[] mutacaoGRASP(char[] individuoOriginal){
+       /*
+       Esse método realiza a mutação por meio da heurística Greedy Randomized Adaptive Search Procedure
+       Ele da mesma forma que no início do VNS, instancia um número predefinido 
+       de indivíduos a partir de mutações simples do indivíduo a ser mutado. Após isso,
+       calcula o melhor fitness e adiciona à Restricted Canditate List todos os que forem até uma
+       porcentagem do mesmo. Após isso, escolhe um aleatoriamente da RCL.
+       O melhor ao fim das iterações é retornado.
+       */
+       
+       //Tamanho do conjunto de soluções e estruturas para armazená-los.
+       int tamConjunto = 50; 
+       char[][] conjuntoSolucoes = new char[tamConjunto][];
+       char[] melhorAnterior = individuoOriginal.clone();
+       //Variáveis de controle para as iterações
+       int estagnadas = 0;
+       double melhorFitness;
+       double taxaAceite = 0.8; //De 0 a 1
+       //O código é executado até que bata a quantidade máxima de iterações sem melhora
+       do
+       {
+           //Define valor altíssimo para o melhor Fitness
+           melhorFitness = Double.MAX_VALUE;
+           //Cria um novo conjunto de soluções
+           for(int i = 0; i < tamConjunto; i++)
+            {
+                conjuntoSolucoes[i] = mutacao(melhorAnterior);
+            }
+           //Encontra o melhor fitness desse conjunto
+           for(int i = 0; i < tamConjunto; i++)
+           {
+               if(fitness(conjuntoSolucoes[i],tam_populacao)<melhorFitness)
+                   melhorFitness = fitness(conjuntoSolucoes[i],tam_populacao);
+           }
+           //Define o parâmetro "alpha" que define o valor mínimo de um fit para ser adicionado à RCL
+           double alpha = melhorFitness * taxaAceite;
+           //Instancia a Restricted Candidate List e adiciona os individuos pertinentes a ela
+           ArrayList<char[]> restrictedCandidateList = new ArrayList();
+           for(int i = 0; i < tamConjunto; i++)
+           {
+               if(fitness(conjuntoSolucoes[i],tam_populacao) > alpha)
+                   restrictedCandidateList.add(conjuntoSolucoes[i]);
+           }
+           //Define um número aleatório e escolhe na lista o indivíduo com esse índice
+           int indiceRandom = randomizador.nextInt(restrictedCandidateList.size());
+           char[] temp = restrictedCandidateList.get(indiceRandom);
+           //Se esse indivíduo apresenta melhora, substitui o melhor com ele. Ao contrário, aumenta o contador de estagnação
+           if(fitness(temp,tam_populacao)<fitness(melhorAnterior,tam_populacao))
+           {
+               melhorAnterior = temp;
+               estagnadas = 0;
+           }
+           else
+               estagnadas++;
+       }while (estagnadas <=5);
+       return melhorAnterior;
    }
    
    public double fitness(char[] individuoAvaliado,int tamanhoPop){
@@ -415,6 +476,11 @@ public class AG_JobShop {
                        case 2:
                        {
                            novaPopulacao[i] = mutacaoVNS(novaPopulacao[i]);
+                           break;
+                       }
+                       case 3:
+                       {
+                           novaPopulacao[i] = mutacaoGRASP(novaPopulacao[i]);
                            break;
                        }
                        default:
