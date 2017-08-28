@@ -2,6 +2,10 @@
  Classe principal com a execução do algoritmo genético.
  Baseado o máximo possível no AG elaborado em R.
  Alterações feitas serão comentadas aqui.
+ Uma das alterações é para que o código seja orientado a objetos, portanto todos 
+ os métodos estão em outras classes, com a exceção do Algoritmo Genético propriamente
+ dito, que está nessa classe, e por ter diversos parâmetros, é necessário ser instanciado.
+ 
  */
 package ag_jobshop;
 
@@ -85,294 +89,15 @@ public class AG_JobShop {
      * @param tamanhopop
      * @return
      */
-    public char[][] criaPopAleatoria(int iteracoes, int pctElite, char [][] populacaoAnterior,
-                                int tamanhopop){
-        /* Função para alocação e criação de uma população.
-        Argumentos:
-        iteracoes: quantidade de iterações já ocorridas do argumento.
-        pctElite: quantidade de membros da população que se referem à porcentagem dentro do elitismo
-        populacaoAnterior: população da iteração anterior do AG, para fins de elitismo
-        tamanhopop: tamanho da população
-        */
-        
-        //Instancia a população a ser retornada.Até o presente momento, o melhor modo de se representar a população foi com uma matriz de chars.
-        char[][] populacao = new char[tamanhopop][tam_Dataset_Linhas];
-        int posInicial;
-//        for(int i = 0; i < 10; i++){
-//            for(int j = 0; j < 10; j++)
-//                populacao[i][j] = new Agendamento();
-//        }
-        if(iteracoes != 1)
-        {
-            //Efetua o elitismo caso essa não seja a primeira execução da função
-            for(int i=0;i<=pctElite;i++)
-                populacao[i] = populacaoAnterior[i].clone();
-            posInicial = pctElite + 1;
-        }
-        else
-            posInicial = 0;
-        
-        //Aqui inicia-se o alocamento dos indivíduos na nova população
-        for(int i = posInicial;i<tamanhopop;i++)
-        {
-            for(int sequencia = 0; sequencia<tam_Dataset_Linhas;sequencia++)
-            {
-                //Escolhe aleatoriamente uma máquina dentre as possíveis para esse job
-                char temp = amostra(dataset[sequencia+1].clone());
-                //Insere a mesma em sua respectiva coluna na população.
-                populacao[i][sequencia] = temp;
-            }
-        }
-        return populacao;
-    }
     
-    public char[] crossover(char[] pai1,char[] pai2){
-        /*
-        Função que realiza o crossover de dois indivíduos, no caso, duas linhas da Matriz População
-        Nessa primeira tentativa, o crossover é realizado de forma comum, Uma vez que o crossover não
-        altera a ordem de agendamento das tarefas, então não se faz necessário um crossover de permutação
-        */
-        int pontoCross = randomizador.nextInt(tam_Dataset_Linhas);
-        char[] filho = pai1;
-//        for(int i=0;i<pontoCross;i++)
-//            filho[i] = pai1[i];
-        for(int i =pontoCross;i<pai2.length;i++)
-            filho[i] = pai2[i];
-        return filho;
-    }
     
-   public char[] mutacao(char[] individuoOriginal){
-       /*
-       Função que realiza a mutação de uma linha da população
-       A mutação funciona selecionando um gene qualquer do indivíduo e substituindo
-       a máquina contida nele por uma outra constando em sua respectiva linha no dataset.
-       */
-       char[] individuoMutado = individuoOriginal.clone();
-       //AS SEGUINTES LINHAS PODEM CONTER ERROS PARA PERCORRER O VETOR E MATRIZ
-       int pontoMutacao = randomizador.nextInt(tam_Dataset_Linhas - 1) +1;
-       char geneMutado = amostra(dataset[pontoMutacao]);
-       individuoMutado[pontoMutacao-1] = geneMutado;
-       return individuoMutado;
-   }
-   
-   private char[] mutacaoSA(char[] individuoOriginal){
-       /*
-       Realiza uma mutação em um indivíduo utilizando o princípio do Simulated Annealing.
-       A "Temperatura" se inicia em 80 sempre e o fator de resfriamento posteriormente
-       será definido pelo usuário.
-       */
-       float temperatura = 80;
-       float fatorResfriamento = 0.3f;
-       do{
-           char[] aleatorio = unicoIndividuoAleatorio();
-           double fitOriginal = fitness(individuoOriginal,tam_populacao);
-           double fitNovo = fitness(aleatorio,tam_populacao);
-           if(fitNovo<fitOriginal)
-               individuoOriginal = aleatorio.clone();
-           else if((int)randomizador.nextInt(100)<temperatura)
-               individuoOriginal = aleatorio.clone();
-           temperatura = temperatura * fatorResfriamento;
-       }while(temperatura>5);
-       return individuoOriginal;
-   }
-   
-   private char[] mutacaoSAComplexa(char[] individuoOriginal){
-       /*
-       Realiza uma mutação em um indivíduo utilizando o princípio do Simulated Annealing.
-       A "Temperatura" se inicia em 80 sempre e o fator de resfriamento posteriormente
-       será definido pelo usuário. É uma "forma diferenciada" de se contar iterações. 
-       Nesta versão do SA, o cálculo da probabilidade é feito usando o exponencial.
-       */
-       int temperatura = 80;
-       int fatorResfriamento = 2;
-       //Esse loop roda enquanto o sistema estiver "quente"
-       do{
-           char[] aleatorio = unicoIndividuoAleatorio();
-           double fitOriginal = fitness(individuoOriginal,tam_populacao);
-           double fitNovo = fitness(aleatorio,tam_populacao);
-           if(fitNovo<fitOriginal)
-               individuoOriginal = aleatorio.clone();
-           else if(exp((fitNovo-fitOriginal)/temperatura)<temperatura)
-               individuoOriginal = aleatorio.clone();
-           temperatura = temperatura - fatorResfriamento;
-       }while(temperatura>5);
-       return individuoOriginal;
-   }
-   
-   private char[] mutacaoVNSv1(char[] individuoOriginal){
-       /*
-       Realiza uma mutação em um indivíduo usando o princípio da VNS: Variable Neighborhood Search.
-       Por ora o tamanho de vizinhaças exploradas é fixo, mas poderá ser alterado para 
-       o usuário setar.
-       Como entende-se por "vizinhança" qualquer alteração a um indivíduo, ela 
-       é composta nessa versão por um conjunto de mutações simples ao indivíduo original.
-       */
-       int tamanhoVizinhanca = 50;
-       char[][] neighborhood = new char[tamanhoVizinhanca][];
-       //As "tamanhoVizinhanca" linhas da vizinhança são instanciadas com uma 
-       //mutação simples do indivíduo em cada uma. Problema: podem ocorrer repetições.
-       for(int i = 0;i<tamanhoVizinhanca;i++)
-       {
-           neighborhood[i] = mutacao(individuoOriginal).clone();
-       }
-       //Aqui são instanciadas variáveis de controle para a seleção do melhor indivíduo da VNS
-       double melhorFit = Double.MAX_VALUE;
-       int posicaoMelhorVizinho = 0;
-       for(int i = 0; i< tamanhoVizinhanca; i++)
-       {
-           double fitTemporario = fitness(neighborhood[i].clone(),tam_populacao);
-           if(fitTemporario<melhorFit)
-           {
-               melhorFit = fitTemporario;
-               posicaoMelhorVizinho = i;
-           }
-       }
-       return neighborhood[posicaoMelhorVizinho].clone();
-   }
-   
-   private char[] mutacaoVNS(char[] individuoOriginal){
-       /*
-       Realiza uma mutação em um indivíduo usando o princípio da VNS: Variable Neighborhood Search.
-       Por ora o tamanho de vizinhaças exploradas é fixo, mas poderá ser alterado para 
-       o usuário setar.
-       Como entende-se por "vizinhança" qualquer alteração a um indivíduo, ela 
-       é composta nessa versão por um conjunto de mutações simples ao indivíduo original.
-       Nesta versão da VNS, são feitas iterações sucessivas até que uma estagnação
-       da melhora (quando houver) ocorra.
-       */
-       //Conjuntos de vizinhança e seu tamanho.
-       int tamanhoVizinhanca = 50;
-       char[][] neighborhood = new char[tamanhoVizinhanca][];
-       char[] melhorAtual = individuoOriginal.clone();
-       //Aqui são instanciadas variáveis de controle para a seleção do melhor indivíduo da VNS
-       double melhorFit;
-       int posicaoMelhorVizinho = 0;
-       int iteracoesEstagnadas = 0;
-       do{
-           melhorFit = Double.MAX_VALUE;
-           //As "tamanhoVizinhanca" linhas da vizinhança são instanciadas com uma 
-           //mutação simples do indivíduo em cada uma. Problema: podem ocorrer repetições.
-           for(int i = 0;i<tamanhoVizinhanca;i++)
-           {
-                neighborhood[i] = mutacao(melhorAtual).clone();
-           }
-           for(int i = 0; i< tamanhoVizinhanca; i++)
-           {
-                double fitTemporario = fitness(neighborhood[i].clone(),tam_populacao);
-                if(fitTemporario<melhorFit)
-                {
-                    melhorFit = fitTemporario;
-                    posicaoMelhorVizinho = i;
-                }
-           }
-           if(melhorFit>fitness(melhorAtual,tam_populacao))
-           {
-               melhorAtual = neighborhood[posicaoMelhorVizinho].clone();
-               iteracoesEstagnadas = 0;
-           }
-           else
-               iteracoesEstagnadas++;
-       }while(iteracoesEstagnadas<=5);
-       return melhorAtual;
-   }
-   
-   private char[] mutacaoGRASP(char[] individuoOriginal){
-       /*
-       Esse método realiza a mutação por meio da heurística Greedy Randomized Adaptive Search Procedure
-       Ele da mesma forma que no início do VNS, instancia um número predefinido 
-       de indivíduos a partir de mutações simples do indivíduo a ser mutado. Após isso,
-       calcula o melhor fitness e adiciona à Restricted Canditate List todos os que forem até uma
-       porcentagem do mesmo. Após isso, escolhe um aleatoriamente da RCL.
-       O melhor ao fim das iterações é retornado.
-       */
-       
-       //Tamanho do conjunto de soluções e estruturas para armazená-los.
-       int tamConjunto = 50; 
-       char[][] conjuntoSolucoes = new char[tamConjunto][];
-       char[] melhorAnterior = individuoOriginal.clone();
-       //Variáveis de controle para as iterações
-       int estagnadas = 0;
-       double melhorFitness;
-       double taxaAceite = 0.8; //De 0 a 1
-       //O código é executado até que bata a quantidade máxima de iterações sem melhora
-       do
-       {
-           //Define valor altíssimo para o melhor Fitness
-           melhorFitness = Double.MAX_VALUE;
-           //Cria um novo conjunto de soluções
-           for(int i = 0; i < tamConjunto; i++)
-            {
-                conjuntoSolucoes[i] = mutacao(melhorAnterior);
-            }
-           //Encontra o melhor fitness desse conjunto
-           for(int i = 0; i < tamConjunto; i++)
-           {
-               if(fitness(conjuntoSolucoes[i],tam_populacao)<melhorFitness)
-                   melhorFitness = fitness(conjuntoSolucoes[i],tam_populacao);
-           }
-           //Define o parâmetro "alpha" que define o valor mínimo de um fit para ser adicionado à RCL
-           double alpha = melhorFitness * taxaAceite;
-           //Instancia a Restricted Candidate List e adiciona os individuos pertinentes a ela
-           ArrayList<char[]> restrictedCandidateList = new ArrayList();
-           for(int i = 0; i < tamConjunto; i++)
-           {
-               if(fitness(conjuntoSolucoes[i],tam_populacao) > alpha)
-                   restrictedCandidateList.add(conjuntoSolucoes[i]);
-           }
-           //Define um número aleatório e escolhe na lista o indivíduo com esse índice
-           int indiceRandom = randomizador.nextInt(restrictedCandidateList.size());
-           char[] temp = restrictedCandidateList.get(indiceRandom);
-           //Se esse indivíduo apresenta melhora, substitui o melhor com ele. Ao contrário, aumenta o contador de estagnação
-           if(fitness(temp,tam_populacao)<fitness(melhorAnterior,tam_populacao))
-           {
-               melhorAnterior = temp;
-               estagnadas = 0;
-           }
-           else
-               estagnadas++;
-       }while (estagnadas <=5);
-       return melhorAnterior;
-   }
-   
-   public double fitness(char[] individuoAvaliado,int tamanhoPop){
-       /*
-       Essa função calcula o Makespam do individuo.
-       Ela é feita percorrendo todo o caminho fornecido pelo vetor na matriz e 
-       somando-se os valores.
-       Pode ter ficado pesado. Caso isso seja verdade, seria melhor encontrar
-       uma alternativa para o data frame do R.
-       */
-       float valor =0;
-       int linha = 0;
-       //char[] maquinas = {'A','B','C','D','E','F','G','H','I','J','K','L','M','O','P','Q','R','S'};
-       double[] fit = new double[dataset[0].length];
-       /*Por padrão os vetores já são inicializados com zeros. Mas se ocorrer algum
-       problema com lixo de memória, descomentar esse trecho.
-       //Inicia fit com zeros
-       for(int i=0;i<individuoAvaliado.length;i++)
-       {
-           fit[i] = 0; 
-       }
-       */
-       for(int i=0;i<individuoAvaliado.length;i++)
-       {
-           //Na posição do vetor referente à letra, soma-se o valor correspondente à mesma no dataset. 
-           fit[posicaoLetra(individuoAvaliado[i])] += Double.parseDouble(dataset[i+1][posicaoLetra(individuoAvaliado[i])]);
-       }
-       //Feito isso, calcula-se o maior dos tempos. Esse será o fitness.
-       double piorFitness = Double.MIN_VALUE;
-       for(int i=0;i<fit.length;i++){
-           if(fit[i]>piorFitness)
-               piorFitness = fit[i];
-       }
-       return piorFitness;
-   }
-   
-   public void algoritmoGenetico(JTextArea ta){
+
+    
+    public void algoritmoGenetico(JTextArea ta){
        /*
        Nessa função será executado o Algoritmo Genético.
        Por fins de organização, será utilizada essa função e não a Main, para que
-       o objeto possa ser instanciado e as funções serem chamadas.
+       o objeto possa ser instanciado os parâmetros de controle ṕossam ser passados.
        */
        int iteracao = 1;
        double melhor = Double.MAX_VALUE;
@@ -394,7 +119,7 @@ public class AG_JobShop {
        while(converge !=10){
            double media = 0;
            x +=1;
-           char[][] sequenciamento = criaPopAleatoria(x,porcentagemElite,novaPopulacao,tam_populacao);
+           char[][] sequenciamento = Populacao.criaPopAleatoria(iteracao, tx_elitismo, novaPopulacao, tam_populacao, tam_Dataset_Linhas, dataset, penalidade);
            //Esse é usando um vetor de doubles. O usado atualmente é um vetor de objetos fitness
            //double[] valorFit = new double[tam_populacao];
            Fitness[] valorFit = new Fitness[tam_populacao];
@@ -406,17 +131,7 @@ public class AG_JobShop {
                valorFit[i].setPosicao(i);
                valorFit[i].setFitness(fitness(sequenciamento[i].clone(),tam_populacao));
            }
-           /*
-           As próximas linhas efetuam o elitismo na população, ordenando o vetor de fitnesses
-           Isso é feito utilizando o método sort da classe Arrays, pricipalmente para fins de 
-           organização de código. Se houver impacto na performance, será implementado um sort do zero.
-           Também foi necessário sobrecarregar o comparador.
-           */
-           Arrays.sort(valorFit, (Fitness f1, Fitness f2) -> {
-                if (f1.getFitness() > f1.getFitness()) return 1;
-                if (f1.getFitness() < f2.getFitness()) return -1;
-                return 0;
-                });
+           valorFit = Populacao.elitismo(valorFit); //NOTA: Talvez seja melhor colocar o reordenador dentro de outra classe sem o nome de elitismo. 
            //Após o array estar ordenado, são inseridos os melhores indivíduos na novapopulação.
            for(int i=0;i<=porcentagemElite;i++)
            {
@@ -548,54 +263,7 @@ public class AG_JobShop {
        }
    }
    
-   public char[] unicoIndividuoAleatorio(){
-       /*Essa função instancia e devolve um único indivíduo feito aleatoriamente*/
-       char[] novoTruta = new char[tam_Dataset_Linhas];
-       for(int sequencia = 0; sequencia<tam_Dataset_Linhas;sequencia++)
-          {
-          //Escolhe aleatoriamente uma máquina dentre as possíveis para esse job
-          char temp = amostra(dataset[sequencia+1].clone());
-          //Insere a mesma em sua respectiva coluna na população.
-          novoTruta[sequencia] = temp;
-          }
-       return novoTruta;
-   }
-   
-   public String[] reordenaVetor(String []vetOriginal){
-       /*
-       Essa função reordena um vetor usando os métodos da classe Collections.
-       Era usada para os vetores de agendamento mas pode não ser mais necessária
-       */
-       String[] vetNovo = null;
-       //Verifica se o valor não está dentro da penalidade
-       for(int i =0; i<vetOriginal.length; i++)
-       {
-           if(vetOriginal[i].compareTo(penalidade)!=0)
-               vetNovo[i] = vetOriginal[i];               
-       }
-       //Após isso reordena aleatoriamente 
-       List<String> temp = Arrays.asList(vetNovo);
-       Collections.shuffle(temp);
-       //temp.toArray(vetNovo);
-       vetNovo = temp.toArray(vetNovo);
-       return vetNovo;
-   }
-   
-   public char amostra(String[] linha){
-       /*Gera um número aleatório referente a uma posição na linha do dataset.
-       Se posição não tiver penalidade, é obtida a coluna referente e retornada
-       Se a posição tiver penalidade, tenta novamente.*/
-       char amostra = 'Z';
-       int numeroAleatorio;
-       int tamLinha = linha.length;
-       char[] maquinas = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S'};
-       while(amostra=='Z'){
-           numeroAleatorio = randomizador.nextInt(tamLinha);
-           if(linha[numeroAleatorio].compareTo(penalidade)!=0)
-               amostra = maquinas[numeroAleatorio];
-       }
-       return amostra;
-   }
+
    
    public int posicaoLetra(char letra){
        //Essa função simplesmente retorna a posição no vetor referente à letra passada por parâmetro.

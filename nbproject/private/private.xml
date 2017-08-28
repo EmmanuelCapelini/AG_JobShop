@@ -3,9 +3,15 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/emman/Documents/NetBeansProjects/AG_JobShop/src/ag_jobshop/AG_JobShop.java</file>
-            <file>file:/C:/Users/emman/Documents/NetBeansProjects/AG_JobShop/src/ag_jobshop/Fitness.java</file>
-            <file>file:/C:/Users/emman/Documents/NetBeansProjects/AG_JobShop/src/interfaces_graficas/InterfaceAG.java</file>
+            <file>file:/home/emmanuel/NetBeansProjects/AG_JobShop/src/ag_jobshop/MetodosAuxiliares.java</file>
+            <file>file:/home/emmanuel/NetBeansProjects/AG_JobShop/src/ag_jobshop/Populacao.java</file>
+            <file>file:/home/emmanuel/NetBeansProjects/AG_JobShop/src/ag_jobshop/GRASP.java</file>
+            <file>file:/home/emmanuel/NetBeansProjects/AG_JobShop/src/ag_jobshop/SimulatedAnnealing.java</file>
+            <file>file:/home/emmanuel/NetBeansProjects/AG_JobShop/src/interfaces_graficas/InterfaceAG.java</file>
+            <file>file:/home/emmanuel/NetBeansProjects/AG_JobShop/src/ag_jobshop/VNS.java</file>
+            <file>file:/home/emmanuel/NetBeansProjects/AG_JobShop/src/ag_jobshop/AG_JobShop.java</file>
+            <file>file:/home/emmanuel/NetBeansProjects/AG_JobShop/src/ag_jobshop/Mutacao.java</file>
+            <file>file:/home/emmanuel/NetBeansProjects/AG_JobShop/src/ag_jobshop/Fitness.java</file>
         </group>
     </open-files>
 </project-private>
