@@ -29,10 +29,6 @@ public class Populacao {
         //Instancia a população a ser retornada.Até o presente momento, o melhor modo de se representar a população foi com uma matriz de chars.
         char[][] populacao = new char[tamanhopop][tam_Dataset_Linhas];
         int posInicial;
-//        for(int i = 0; i < 10; i++){
-//            for(int j = 0; j < 10; j++)
-//                populacao[i][j] = new Agendamento();
-//        }
         if(iteracoes != 1)
         {
             //Efetua o elitismo caso essa não seja a primeira execução da função
@@ -53,6 +49,57 @@ public class Populacao {
                 //Insere a mesma em sua respectiva coluna na população.
                 populacao[i][sequencia] = temp;
             }
+        }
+        return populacao;
+    }
+    
+    public static char[][] criaPopVNS(int iteracoes, int pctElite, char [][] populacaoAnterior,
+                                int tamanhopop, int tam_Dataset_Linhas, String[][] dataset, String penalidade){
+        /*
+        Esse método aloca uma população toda usando os princípios da Variable Neighborhood Search.
+        O funcionamento básico é com ela sendo criadade forma aleatória, e depois disso seus indivíduos
+        passarem pelo processo da busca por vizinhanças variáveis.
+        */
+        //Primeiramente cria a população aleatória
+        char [][] populacao = Populacao.criaPopAleatoria(iteracoes, pctElite, populacaoAnterior, tamanhopop, tam_Dataset_Linhas, dataset, penalidade);
+        //Aplica o VNS em cada um
+        for(int i=0; i<tamanhopop;i++)
+        {
+            populacao[i] = VNS.mutacaoVNS(populacao[i], tam_Dataset_Linhas, dataset, penalidade);
+        }
+        return populacao;
+    }
+    
+    public static char[][] criaPopGRASP(int iteracoes, int pctElite, char [][] populacaoAnterior,
+                                int tamanhopop, int tam_Dataset_Linhas, String[][] dataset, String penalidade){
+        /*
+        Esse método aloca uma população toda usando o Greedy Randomized Adaptive Search Procedures.
+        Cada indivíduo é criado de forma aleatória para depois ser realizada um GRASP no mesmo,
+        com o melhor sendo o escolhido para fazer parte da população.
+        */
+        //Cria a população de forma aleatória
+        char [][] populacao = Populacao.criaPopAleatoria(iteracoes, pctElite, populacaoAnterior, tamanhopop, tam_Dataset_Linhas, dataset, penalidade);
+        //Aplica o GRASP em cada um
+        for(int i=0; i<tamanhopop;i++)
+        {
+            populacao[i] = GRASP.mutacaoGRASP(populacao[i], tam_Dataset_Linhas, dataset, penalidade);
+        }
+        return populacao;
+    }
+    
+    public static char[][] criaPopSA(int iteracoes, int pctElite, char [][] populacaoAnterior,
+                                int tamanhopop, int tam_Dataset_Linhas, String[][] dataset, String penalidade){
+        /*
+        Esse método cria uma população toda usando o Simulated Annealing.
+        Cada inviíduo é criado de forma aleatória, para depois ser aplicado o SA
+        antes de ser inserido na população.
+        */
+        //Cria a população aleatoriamente
+        char [][] populacao = Populacao.criaPopAleatoria(iteracoes, pctElite, populacaoAnterior, tamanhopop, tam_Dataset_Linhas, dataset, penalidade);
+        //Aplica o GRASP em cada um
+        for(int i=0; i<tamanhopop;i++)
+        {
+            populacao[i] = SimulatedAnnealing.mutacaoSA(populacao[i], dataset, tam_Dataset_Linhas, penalidade);
         }
         return populacao;
     }
@@ -86,7 +133,7 @@ public class Populacao {
         return filho;
     }   
     
-        public static Fitness[] elitismo(Fitness[] valorFit){
+    public static Fitness[] elitismo(Fitness[] valorFit){
         /*
         Esta função efetua o elitismo na população, ordenando o vetor de fitnesses
         Isso é feito simplesmente utilizando o método sort da classe Arrays, pricipalmente para fins de 
@@ -100,4 +147,5 @@ public class Populacao {
             });
         return valorFit;
     }
-}
+    
+ }
