@@ -216,11 +216,7 @@ public class AG_JobShop {
                valorFit[i].setPosicao(i);
                valorFit[i].setFitness(Fitness.calculaFitness(novaPopulacao[i].clone(), dataset));
            }
-           Arrays.sort(valorFit, (Fitness f1, Fitness f2) -> {
-                if (f1.getFitness() > f1.getFitness()) return 1;
-                if (f1.getFitness() < f2.getFitness()) return -1;
-                return 0;
-                });
+           Populacao.elitismo(valorFit);
            for(int i=0;i<=porcentagemElite;i++)
            {
               //Uma diferença desse trecho para o anterior de elitismo é que é feito um 'swap' entre os indivíduos ao invés de simplesmente alocar.
