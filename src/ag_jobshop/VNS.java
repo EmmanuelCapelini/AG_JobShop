@@ -17,7 +17,7 @@ import java.util.Random;
  * @author emmanuel
  */
 public class VNS {
-       private char[] mutacaoVNSBasica(char[] individuoOriginal, int tam_Dataset_Linhas, String[][] dataset, String penalidade){
+       public static char[] mutacaoVNSBasica(char[] individuoOriginal, int tam_Dataset_Linhas, String[][] dataset, String penalidade){
        /*
        Realiza uma mutação em um indivíduo usando o princípio da VNS: Variable Neighborhood Search.
        Por ora o tamanho de vizinhaças exploradas é fixo, mas poderá ser alterado para 
@@ -48,7 +48,7 @@ public class VNS {
        return neighborhood[posicaoMelhorVizinho].clone();
    }
    
-   private char[] mutacaoVNS(char[] individuoOriginal, int tam_Dataset_Linhas, String[][] dataset, String penalidade){
+   public static char[] mutacaoVNS(char[] individuoOriginal, int tam_Dataset_Linhas, String[][] dataset, String penalidade){
        /*
        Realiza uma mutação em um indivíduo usando o princípio da VNS: Variable Neighborhood Search.
        Por ora o tamanho de vizinhaças exploradas é fixo, mas poderá ser alterado para 

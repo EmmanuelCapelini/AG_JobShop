@@ -90,9 +90,6 @@ public class AG_JobShop {
      * @return
      */
     
-    
-
-    
     public void algoritmoGenetico(JTextArea ta){
        /*
        Nessa função será executado o Algoritmo Genético.
@@ -129,7 +126,7 @@ public class AG_JobShop {
            {
                valorFit[i] = new Fitness();
                valorFit[i].setPosicao(i);
-               valorFit[i].setFitness(fitness(sequenciamento[i].clone(),tam_populacao));
+               valorFit[i].setFitness(Fitness.calculaFitness(sequenciamento[i].clone(), dataset));
            }
            valorFit = Populacao.elitismo(valorFit); //NOTA: Talvez seja melhor colocar o reordenador dentro de outra classe sem o nome de elitismo. 
            //Após o array estar ordenado, são inseridos os melhores indivíduos na novapopulação.
@@ -147,24 +144,24 @@ public class AG_JobShop {
                    int pai1, pai2, r1, r2;
                    r1 = randomizador.nextInt(tam_populacao);
                    r2 = randomizador.nextInt(tam_populacao);
-                   if(fitness(sequenciamento[r1].clone(),tam_populacao)>fitness(sequenciamento[r2].clone(),tam_populacao))
+                   if(Fitness.calculaFitness(sequenciamento[r1].clone(), dataset)>Fitness.calculaFitness(sequenciamento[r2].clone(), dataset))
                        pai1 = r2;
                    else
                        pai1 = r1;
                    r1 = randomizador.nextInt(tam_populacao);
                    r2 = randomizador.nextInt(tam_populacao);
-                   if(fitness(sequenciamento[r1].clone(),tam_populacao)>fitness(sequenciamento[r2].clone(),tam_populacao))
+                   if(Fitness.calculaFitness(sequenciamento[r1].clone(), dataset)>Fitness.calculaFitness(sequenciamento[r2].clone(), dataset))
                        pai2 = r2;
                    else
                        pai2 = r1;
-                   novaPopulacao[i] = crossover(sequenciamento[pai1].clone(),sequenciamento[pai2].clone());
+                   novaPopulacao[i] = Populacao.crossover(sequenciamento[pai1].clone(),sequenciamento[pai2].clone(),tam_Dataset_Linhas);
                 }
                else{
                    //Se não está, recebe um indivíduo aleatório
                    for(int sequencia = 0; sequencia<tam_Dataset_Linhas;sequencia++)
                    {
                         //Escolhe aleatoriamente uma máquina dentre as possíveis para esse job
-                        char temp = amostra(dataset[sequencia+1].clone());
+                        char temp = MetodosAuxiliares.amostra(dataset[sequencia+1].clone(),penalidade);
                         //Insere a mesma em sua respectiva coluna na população.
                         novaPopulacao[i][sequencia] = temp;
                     }
@@ -180,26 +177,26 @@ public class AG_JobShop {
                    {
                        case 0:
                        {
-                           novaPopulacao[i] = mutacao(novaPopulacao[i]);
+                           novaPopulacao[i] = Mutacao.mutacao(novaPopulacao[i], tam_Dataset_Linhas, dataset, penalidade);
                            break;
                        }
                        case 1:
                        {
-                           novaPopulacao[i] = mutacaoSAComplexa(novaPopulacao[i]);
+                           novaPopulacao[i] = SimulatedAnnealing.mutacaoSA(novaPopulacao[i], dataset, tam_Dataset_Linhas, penalidade);
                            break;
                        }
                        case 2:
                        {
-                           novaPopulacao[i] = mutacaoVNS(novaPopulacao[i]);
+                           novaPopulacao[i] = VNS.mutacaoVNS(novaPopulacao[i], tam_Dataset_Linhas, dataset, penalidade);
                            break;
                        }
                        case 3:
                        {
-                           novaPopulacao[i] = mutacaoGRASP(novaPopulacao[i]);
+                           novaPopulacao[i] = GRASP.mutacaoGRASP(novaPopulacao[i], tam_Dataset_Linhas, dataset, penalidade);
                            break;
                        }
                        default:
-                           novaPopulacao[i] = mutacao(novaPopulacao[i]);
+                           novaPopulacao[i] = Mutacao.mutacao(novaPopulacao[i], tam_Dataset_Linhas, dataset, penalidade);
                    }
                }
                
@@ -217,7 +214,7 @@ public class AG_JobShop {
            {
                valorFit[i] = new Fitness();
                valorFit[i].setPosicao(i);
-               valorFit[i].setFitness(fitness(novaPopulacao[i].clone(),tam_populacao));
+               valorFit[i].setFitness(Fitness.calculaFitness(novaPopulacao[i].clone(), dataset));
            }
            Arrays.sort(valorFit, (Fitness f1, Fitness f2) -> {
                 if (f1.getFitness() > f1.getFitness()) return 1;
@@ -227,6 +224,7 @@ public class AG_JobShop {
            for(int i=0;i<=porcentagemElite;i++)
            {
               //Uma diferença desse trecho para o anterior de elitismo é que é feito um 'swap' entre os indivíduos ao invés de simplesmente alocar.
+              // Ou seja, os melhores indivíduos são jogados para as primeiras posições, tendo seu lugar trocado com quem estaria originalmente lá.
               char[] temp = novaPopulacao[i].clone();
               novaPopulacao[i] = novaPopulacao[valorFit[i].getPosicao()].clone();
               novaPopulacao[valorFit[i].getPosicao()] = temp;
