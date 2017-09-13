@@ -1,0 +1,3 @@
+Algoritmo genético iniciado, populacao tipo Aleatoria mutacao tipo SA+LB
+
+Fit do melhor indivíduo: 320.94

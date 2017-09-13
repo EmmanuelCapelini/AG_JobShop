@@ -1,0 +1,2 @@
+Algoritmo genético iniciado, mutacao tipo1
+Fit do melhor indivíduo: 315.94

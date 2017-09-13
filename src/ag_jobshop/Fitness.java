@@ -35,9 +35,6 @@ public class Fitness {
        Pode ter ficado pesado. Caso isso seja verdade, seria melhor encontrar
        uma alternativa para o data frame do R.
        */
-       float valor =0;
-       int linha = 0;
-       //char[] maquinas = {'A','B','C','D','E','F','G','H','I','J','K','L','M','O','P','Q','R','S'};
        double[] fit = new double[dataset[0].length];
        /*Por padrão os vetores já são inicializados com zeros. Mas se ocorrer algum
        problema com lixo de memória, descomentar esse trecho.
@@ -71,6 +68,53 @@ public class Fitness {
        }
        return posicaoletra;
    }
+    
+    public static int calculaGargalo(char[] individuoAvaliado, String[][] dataset){
+       /*Essa função retorna o gargalo (bottleneck) de um sistema de máquinas.
+        O gargalo é definido pela máquina com o maior makespam. A fórmula de cálculo
+        é a mesma do fitness.*/ 
+       int linhaGargalo = 0;
+       double[] fit = new double[dataset[0].length];
+       for(int i=0;i<individuoAvaliado.length;i++)
+       {
+           //Na posição do vetor referente à letra, soma-se o valor correspondente à mesma no dataset. 
+           fit[posicaoLetra(individuoAvaliado[i])] += Double.parseDouble(dataset[i+1][posicaoLetra(individuoAvaliado[i])]);
+       }
+       //Feito isso, calcula-se o maior dos tempos. Esse será o gargalo.
+       double piorFitness = Double.MIN_VALUE;
+       for(int i=0;i<fit.length;i++){
+           if(fit[i]>piorFitness)
+           {
+               //Se o fitness é maior, esse é o gargalo.
+               piorFitness = fit[i];
+               linhaGargalo = i;
+           }
+       }
+        return linhaGargalo;
+    }
+    
+    public static int calculaOcio(char[] individuoAvaliado, String[][] dataset){
+       /*Essa função retorna a maquina mais ociosa de um sistema. Isso é definido
+        pela máquina com o menor fitness.*/ 
+       int maqOciosa = 0;
+       double[] fit = new double[dataset[0].length];
+       for(int i=0;i<individuoAvaliado.length;i++)
+       {
+           //Na posição do vetor referente à letra, soma-se o valor correspondente à mesma no dataset. 
+           fit[posicaoLetra(individuoAvaliado[i])] += Double.parseDouble(dataset[i+1][posicaoLetra(individuoAvaliado[i])]);
+       }
+       //Feito isso, calcula-se o maior dos tempos. Esse será o gargalo.
+       double melhorFitness = Double.MIN_VALUE;
+       for(int i=0;i<fit.length;i++){
+           if(fit[i]<melhorFitness)
+           {
+               //Se o fitness é maior, esse é o gargalo.
+               melhorFitness = fit[i];
+               maqOciosa = i;
+           }
+       }
+        return maqOciosa;
+    }
     
     // === Getters e setters para instanciar um objeto Fitness ==== //
     
