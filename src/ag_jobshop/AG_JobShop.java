@@ -224,6 +224,7 @@ public class AG_JobShop {
        double melhor = Double.MAX_VALUE;
        double melhorAnterior = 99999;
        int converge = 1;
+       int geracaoConvergente = 0;
        int x = 0;
        int indicemelhor = 0;
        saida = ta;
@@ -244,10 +245,11 @@ public class AG_JobShop {
        log.createNewFile();
        FileWriter ag_logger = new FileWriter(log);
        /*Uma saída simples para o console, replicada no txt*/
-       ag_logger.write("Algoritmo genético iniciado, populacao tipo "+tipoPopulacao+ " mutacao tipo " +tipoMutacao+mutacaoSecundaria+"\n");
+       ag_logger.write("Populacao tipo "+tipoPopulacao+" Tamanho" +tam_populacao +" mutacao tipo " 
+               +tipoMutacao+mutacaoSecundaria+" Execucao "+execucaoAtual+"\n");
        System.out.println("Algoritmo genético iniciado, populacao tipo "+tipoPopulacao+ " mutacao tipo " +tipoMutacao+mutacaoSecundaria);
-       
-       
+       //armazena o valor inicial em milissegundos do AG.
+       long tempoInicial = System.currentTimeMillis();
        /*A partir daqui, este laço se refere ao Algoritmo Genético. A condicao de parada é : 10 gerações estagnadas.*/
        while(converge !=50){
            double media = 0;
@@ -438,14 +440,17 @@ public class AG_JobShop {
            {
                melhorAnterior = melhor;
                converge = 1;
+               geracaoConvergente = iteracao-1;
            }
            else
                converge++;
        }
        melhorIndividuo = novaPopulacao[indicemelhor].clone();
+       long tempoFinal = System.currentTimeMillis();
+       long tempoExec = tempoFinal - tempoInicial;
        System.out.println(" Fit do melhor individuo: " +melhor);
        saida.append(" Fit do melhor individuo: " +melhor);
-       ag_logger.write("\nFit do melhor indivíduo: "+melhorAnterior+"\n");
+       ag_logger.write("Fit do melhor indivíduo , "+melhorAnterior+" , Tempo Execucao(ms) , "+tempoExec +" , Geracao convergente ,"+geracaoConvergente+"\n");
        System.out.println("Melhor individuo:");
        saida.append("\nMelhor individuo:");
        for(char c:melhorIndividuo)

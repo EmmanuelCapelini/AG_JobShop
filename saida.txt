@@ -1,0 +1,12 @@
+Populacao tipo Aleatoria Tamanho200 mutacao tipo SA+LB Execucao 2
+
+Fit do melhor indivíduo | 311.13 | Tempo Execucao(ms) | 4036 | Geracao convergente |16
+Populacao tipo Aleatoria Tamanho200 mutacao tipo SA+LB Execucao 2
+
+Fit do melhor indivíduo | 311.13 | Tempo Execucao(ms) | 4036 | Geracao convergente |16
+Populacao tipo Aleatoria Tamanho200 mutacao tipo SA+LB Execucao 2
+
+Fit do melhor indivíduo | 311.13 | Tempo Execucao(ms) | 4036 | Geracao convergente |16
+Populacao tipo Aleatoria Tamanho200 mutacao tipo SA+LB Execucao 2
+
+Fit do melhor indivíduo | 311.13 | Tempo Execucao(ms) | 4036 | Geracao convergente |16
